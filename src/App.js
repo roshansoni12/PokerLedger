@@ -1,25 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+// App.js
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './HomePage';
+import NewGamePage from './NewGamePage';
+import FinalizeGamePage from './FinalizeGamePage';
 
-function App() {
+const App = () => {
+  const [playersForFinalization, setPlayersForFinalization] = useState([]);
+  const [results, setResults] = useState(null);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage results={results} />} />
+        <Route
+          path="/new-game"
+          element={
+            <NewGamePage
+              setPlayersForFinalization={(players) =>
+                setPlayersForFinalization(players)
+              }
+            />
+          }
+        />
+        <Route
+          path="/finalize-game"
+          element={
+            <FinalizeGamePage
+              players={playersForFinalization}
+              setWinner={(playersWithResults) => {
+                const sortedResults = playersWithResults.sort(
+                  (a, b) => b.result - a.result
+                );
+                setResults(sortedResults);
+              }}
+            />
+          }
+        />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
