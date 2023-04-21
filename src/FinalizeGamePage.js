@@ -1,42 +1,59 @@
-// FinalizeGamePage.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const FinalizeGamePage = ({ players, setWinner }) => {
+const FinalizeGamePage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [results, setResults] = useState(Array(players.length).fill(''));
+  const activePlayers = location.state?.activePlayers || [];
+  const eliminatedPlayers = location.state?.eliminatedPlayers || [];
+  const [finalAmounts, setFinalAmounts] = useState({});
 
-  const handleInputChange = (index, value) => {
-    const newResults = [...results];
-    newResults[index] = value;
-    setResults(newResults);
-  };
+  const totalPot = activePlayers
+    .concat(eliminatedPlayers)
+    .reduce((sum, player) => sum + player.buyIn, 0);
 
-  const finalize = () => {
-    const playersWithResults = players.map((player, index) => ({
-      ...player,
-      result: parseInt(results[index], 10),
-    }));
-    setWinner(playersWithResults);
+  const handleFinalize = () => {
+    // Logic for handling finalization goes here
+    console.log(finalAmounts);
     navigate('/');
   };
 
-  const isEveryResultFilled = results.every((result) => result !== '');
+  const handleAmountChange = (id, value) => {
+    setFinalAmounts({ ...finalAmounts, [id]: value });
+  };
+
+  const allFieldsFilled = activePlayers.every(
+    (player) => finalAmounts[player.id] !== undefined
+  );
+
+  const sumOfEnteredValues = Object.values(finalAmounts).reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
+  const isPotEqual = sumOfEnteredValues === totalPot;
 
   return (
     <div>
       <h1>Finalize Game</h1>
-      {players.map((player, index) => (
-        <div key={player.id}>
-          {player.name} - Result: $
-          <input
-            type="number"
-            value={results[index]}
-            onChange={(e) => handleInputChange(index, e.target.value)}
-          />
-        </div>
-      ))}
-      <button disabled={!isEveryResultFilled} onClick={finalize}>
+      <h2>Total Pot: ${totalPot}</h2>
+      <ul>
+        {activePlayers.map((player) => (
+          <li key={player.id}>
+            {player.name} - Buy In: ${player.buyIn}
+            <input
+              type="number"
+              placeholder="Final Amount"
+              value={finalAmounts[player.id] || ''}
+              onChange={(e) =>
+                handleAmountChange(player.id, parseInt(e.target.value))
+              }
+            />
+          </li>
+        ))}
+      </ul>
+      {!isPotEqual && <p>Please make sure the entered values equal the total pot.</p>}
+      <button onClick={handleFinalize} disabled={!allFieldsFilled || !isPotEqual}>
         Finalize
       </button>
     </div>

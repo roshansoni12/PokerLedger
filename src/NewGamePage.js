@@ -46,22 +46,27 @@ const NewGamePage = ({ setPlayersForFinalization }) => {
   };
 
   const finalizeGame = () => {
-    setPlayersForFinalization([...players, ...eliminatedPlayers]);
+    setPlayersForFinalization(players);
 
     const namesRef = database.ref('names');
     const balancesRef = database.ref('balances');
     players.concat(eliminatedPlayers).forEach((player) => {
       if (!namesFromDB.includes(player.name)) {
         namesRef.push(player.name);
-        balancesRef.child(player.name).set(player.buyIn);
-      } else {
-        balancesRef.child(player.name).transaction((currentBalance) => {
-          return (currentBalance || 0) + player.buyIn;
-        });
       }
+
+      const change = eliminatedPlayers.some((eliminated) => eliminated.id === player.id)
+        ? -player.buyIn
+        : player.buyIn;
+
+      balancesRef.child(player.name).transaction((currentBalance) => {
+        return (currentBalance || 0) + change;
+      });
     });
 
-    navigate('/finalize-game');
+    navigate('/finalize-game', {
+      state: { activePlayers: players, eliminatedPlayers: eliminatedPlayers },
+    });
   };
 
   const totalPot = players

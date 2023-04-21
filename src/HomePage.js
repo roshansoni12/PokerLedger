@@ -33,13 +33,28 @@ const HomePage = () => {
     }
   };
 
+  const removePlayer = (name) => {
+    if (window.confirm(`Are you sure you want to remove ${name} from the leaderboard?`)) {
+      const balancesRef = database.ref(`balances/${name}`);
+      const namesRef = database.ref('names').orderByValue().equalTo(name);
+
+      balancesRef.remove();
+      namesRef.once('child_added', (snapshot) => {
+        snapshot.ref.remove();
+      });
+    }
+  };
+
+  const sortedBalances = Object.entries(balances).sort((a, b) => b[1] - a[1]);
+
   return (
     <div>
       <h1>HomePage</h1>
       <ul>
-        {Object.entries(balances).map(([name, balance], index) => (
+        {sortedBalances.map(([name, balance], index) => (
           <li key={index}>
             {name}: {balance}
+            <button onClick={() => removePlayer(name)}>Remove</button>
           </li>
         ))}
       </ul>
